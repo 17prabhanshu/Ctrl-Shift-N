@@ -415,7 +415,7 @@ export function Hero({ onAnalyze }: HeroProps) {
                   onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                   className="btn-primary inline-flex items-center gap-2 px-6 py-3 text-sm"
                 >
-                  Run Analysis <ArrowRight className="w-4 h-4" />
+                  Start Analysis <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
