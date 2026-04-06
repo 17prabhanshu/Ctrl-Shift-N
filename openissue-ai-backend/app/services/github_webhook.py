@@ -80,6 +80,48 @@ class GitHubWebhookHandler:
             comments = issue_data.get("comments", 0)
             reactions = issue_data.get("reactions", {}).get("total_count", 0)
 
+            # ══════════════════════════════════════════════════════════
+            # PRECURSOR MATCHING ENGINE — Only act when conditions met
+            # ══════════════════════════════════════════════════════════
+            webhook_mode = settings.WEBHOOK_MODE.lower()
+
+            if webhook_mode == "manual":
+                logger.info(f"Webhook mode is 'manual'. Skipping issue #{issue_num}.")
+                return
+
+            if webhook_mode == "precursor":
+                match_reasons = []
+                full_text = f"{title} {body}".lower()
+
+                # 1. Bot filter
+                if settings.WEBHOOK_SKIP_BOTS and (author.endswith("[bot]") or author.endswith("-bot")):
+                    logger.info(f"Precursor SKIP: Issue #{issue_num} authored by bot '{author}'")
+                    return
+
+                # 2. Repo allowlist
+                if settings.WEBHOOK_REPO_ALLOWLIST:
+                    repo_full = f"{owner}/{repo}"
+                    if repo_full not in settings.WEBHOOK_REPO_ALLOWLIST:
+                        logger.info(f"Precursor SKIP: Repo '{repo_full}' not in allowlist")
+                        return
+
+                # 3. Keyword triggers
+                matched_keywords = [kw for kw in settings.WEBHOOK_KEYWORD_TRIGGERS if kw.lower() in full_text]
+                if matched_keywords:
+                    match_reasons.append(f"keywords: {matched_keywords}")
+
+                # 4. Label triggers
+                matched_labels = [lbl for lbl in labels if lbl.lower() in [t.lower() for t in settings.WEBHOOK_LABEL_TRIGGERS]]
+                if matched_labels:
+                    match_reasons.append(f"labels: {matched_labels}")
+
+                # Check if any precursor matched
+                if not match_reasons:
+                    logger.info(f"Precursor SKIP: Issue #{issue_num} '{title[:50]}' did not match any triggers. No keywords or labels found.")
+                    return
+
+                logger.info(f"Precursor MATCH ✓ Issue #{issue_num} triggered by: {', '.join(match_reasons)}")
+
             logger.info(f"Processing webhook for issue #{issue_num} in {owner}/{repo}")
 
             # Mock metadata object to pass to analyzer (similar to fetch_github_issue)

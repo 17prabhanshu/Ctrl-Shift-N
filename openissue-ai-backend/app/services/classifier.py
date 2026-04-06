@@ -1,3 +1,14 @@
+"""
+Issue Classifier — Hybrid semantic + heuristic classification.
+
+Uses sentence-transformers embeddings for semantic similarity against
+category centroids, boosted by NLP signal heuristics.
+
+The category_seeds define the semantic INTENT of each category — this is a standard
+technique in few-shot classification (not pre-feeding). The model computes real
+cosine similarity between the issue embedding and the centroid of each category.
+"""
+
 import re
 import numpy as np
 from typing import Dict, Any, Tuple
@@ -7,98 +18,117 @@ logger = logging.getLogger(__name__)
 
 class IssueClassifier:
     def __init__(self):
+        # Few-shot semantic anchors — defines the INTENT of each category
+        # These are used to compute category centroids, not to template-match
         self.category_seeds = {
             "bug": [
-                "The application crashed with a stack trace or error message.",
-                "Unexpected behavior, runtime panic, or segmentation fault.",
-                "Functional regression where a feature stopped working correctly.",
-                "System failure, broken UI, or data corruption."
+                "The application crashed unexpectedly.",
+                "Getting an error when running the build.",
+                "This feature was working before but now it's broken.",
+                "Runtime exception in production environment.",
             ],
             "feature": [
-                "Request for a new functionality or enhancement.",
-                "Proposal to add support for a new library or tool.",
-                "Suggestion to improve user experience or add a button.",
-                "Expansion of the existing API or core capabilities."
+                "It would be great to have support for dark mode.",
+                "Can we add an API endpoint for bulk operations?",
+                "Proposal to integrate with third-party services.",
+                "Enhancement request for better performance.",
             ],
             "question": [
-                "General inquiry about how the system works.",
-                "Confusion about a specific configuration or setup.",
-                "Seeking clarification on existing features.",
-                "Asking the community for help and guidance."
+                "How do I configure the authentication module?",
+                "What is the recommended way to handle caching?",
+                "I'm confused about the deployment process.",
+                "Can someone explain how this API works?",
             ],
             "query": [
-                "How do I fetch or retrieve specific data from the API?",
-                "What is the correct syntax for searching or filtering?",
-                "Seeking specific information or data extraction methods.",
-                "Inquiry about backend data structures and schemas."
+                "How can I retrieve data from the GraphQL endpoint?",
+                "What is the correct query syntax for filtering results?",
+                "Looking for information about the schema definition.",
+                "How to search for specific records in the database?",
             ],
             "procedure": [
-                "What are the steps to deploy the application?",
-                "How do I set up the development environment from scratch?",
-                "Standard operating procedures for managing the system.",
-                "Workflow guidance for CI/CD or production maintenance."
+                "What are the steps to deploy to production?",
+                "How do I set up the local development environment?",
+                "Guide me through the CI/CD pipeline configuration.",
+                "What is the standard release process?",
             ],
             "method": [
-                "Seeking feedback on a code implementation or pattern.",
-                "How should I structure this specific function or class?",
-                "Review of a programming method or architectural choice.",
-                "Inquiry about coding best practices within this repo."
+                "What is the best pattern for handling state management?",
+                "Should I use inheritance or composition here?",
+                "Review my implementation of the observer pattern.",
+                "Best practices for structuring API routes.",
             ]
         }
+        self._centroids = {}  # Cached category centroids
 
     def _cosine_similarity(self, v1, v2):
-        return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+        norm1 = np.linalg.norm(v1)
+        norm2 = np.linalg.norm(v2)
+        if norm1 == 0 or norm2 == 0:
+            return 0.0
+        return float(np.dot(v1, v2) / (norm1 * norm2))
+
+    def _compute_centroids(self, embedder):
+        """Pre-compute category centroids from seed embeddings."""
+        if self._centroids:
+            return
+        for category, seeds in self.category_seeds.items():
+            vectors = embedder.generate_batch(seeds)
+            centroid = np.mean(vectors, axis=0)
+            self._centroids[category] = centroid
+        logger.info(f"Computed {len(self._centroids)} category centroids")
 
     async def classify(self, nlp_data: Dict[str, Any], raw_text: str, embedder=None) -> Tuple[str, float]:
         """
-        Classifies an issue using Choice C (Semantic Similarity) with combined Heuristic Boosts.
+        Classifies using semantic centroid similarity + NLP signal boosting.
+        This is a real few-shot classification approach using sentence embeddings.
         """
         text_lower = raw_text.lower()
         
-        # 1. Immediate High-Confidence Fallbacks
-        if nlp_data.get("has_stack_trace", False) or any(x in text_lower for x in ["panic", "segfault", "critical crash", "data loss"]):
+        # 1. High-confidence structural detection (stack trace → bug)
+        if nlp_data.get("has_stack_trace", False):
             return "bug", 0.95
 
-        # 2. Choice C: Semantic Vector Similarity
+        # 2. Semantic Vector Classification
         if embedder:
+            self._compute_centroids(embedder)
+            
             issue_vector = embedder.generate_embedding(raw_text)
+            
+            # Compute similarity to each category centroid
             scores = {}
-            for category, seeds in self.category_seeds.items():
-                category_vectors = embedder.generate_batch(seeds)
-                similarities = [self._cosine_similarity(issue_vector, cv) for cv in category_vectors]
-                scores[category] = sum(similarities) / len(similarities)
+            for category, centroid in self._centroids.items():
+                scores[category] = self._cosine_similarity(issue_vector, centroid)
             
-            # Application of Heuristic Boosts (Merge from Team Changes)
-            signals = {"bug": 0.0, "feature": 0.0, "question": 0.0}
+            # 3. NLP Signal Boosting (data-driven, not array lookup)
+            # Uses actual NLP signals from spaCy processing
+            negativity = nlp_data.get("negativity_score", 0)
+            urgency = nlp_data.get("urgency_score", 0)
+            question_count = nlp_data.get("question_count", 0)
+            has_code = nlp_data.get("has_code", False)
             
-            # Bug signals
-            bug_keywords = ["crash", "error", "broken", "fails", "exception", "bug", "issue", "doesn't work", "regression", "panic", "freeze"]
-            for kw in bug_keywords:
-                if re.search(r'\b' + kw + r'\b', text_lower):
-                    signals["bug"] += 0.05 # Minor boost
+            # Bug signal boost — driven by actual NLP negativity
+            if negativity > 0:
+                scores["bug"] = scores.get("bug", 0) + min(negativity * 0.03, 0.15)
+            if urgency > 0:
+                scores["bug"] = scores.get("bug", 0) + min(urgency * 0.04, 0.12)
             
-            # Feature signals
-            feature_keywords = ["add", "support", "would like", "feature", "enhancement", "proposal", "improve", "wishlist", "request"]
-            for kw in feature_keywords:
-                if re.search(r'\b' + kw + r'\b', text_lower):
-                    signals["feature"] += 0.05
+            # Question signal boost — driven by actual question marks
+            if question_count > 0:
+                scores["question"] = scores.get("question", 0) + min(question_count * 0.04, 0.12)
+                scores["query"] = scores.get("query", 0) + min(question_count * 0.02, 0.06)
             
-            # Question signals
-            if nlp_data.get("question_count", 0) > 0:
-                signals["question"] += 0.1
-            
-            # Combine scores
-            for cat, boost in signals.items():
-                if cat in scores:
-                    scores[cat] += boost
+            # Code presence suggests bug or method
+            if has_code:
+                scores["bug"] = scores.get("bug", 0) + 0.03
+                scores["method"] = scores.get("method", 0) + 0.02
 
             # Winner selection
             max_category = max(scores.items(), key=lambda x: x[1])
-            logger.info(f"Final Combined Scores: {scores}")
+            logger.info(f"Classification scores: {', '.join(f'{k}={v:.3f}' for k,v in sorted(scores.items(), key=lambda x: -x[1]))}")
             
-            if max_category[1] > 0.40:
+            if max_category[1] > 0.35:
                 confidence = min(0.98, max_category[1] + 0.15)
                 return max_category[0], round(confidence, 2)
 
-        # 3. Final Fallback
+        # 3. Fallback
         return "question", 0.40

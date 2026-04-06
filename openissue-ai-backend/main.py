@@ -9,6 +9,7 @@ import re
 import logging
 import httpx
 from typing import Dict, Any, Tuple
+from config import settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -146,3 +147,88 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks):
     background_tasks.add_task(webhook_handler.process_webhook, event_type, payload_json)
 
     return {"status": "Accepted", "message": "Webhook received and processing."}
+
+
+# ═══════════════════════════════════════════════════════
+# Webhook Configuration API (Precursor System)
+# ═══════════════════════════════════════════════════════
+
+@app.get("/api/webhook/config")
+async def get_webhook_config():
+    """Get current webhook precursor configuration."""
+    return {
+        "mode": settings.WEBHOOK_MODE,
+        "keyword_triggers": settings.WEBHOOK_KEYWORD_TRIGGERS,
+        "label_triggers": settings.WEBHOOK_LABEL_TRIGGERS,
+        "repo_allowlist": settings.WEBHOOK_REPO_ALLOWLIST,
+        "skip_bots": settings.WEBHOOK_SKIP_BOTS,
+        "playwright_enabled": settings.PLAYWRIGHT_ENABLED,
+    }
+
+@app.put("/api/webhook/config")
+async def update_webhook_config(config: dict):
+    """Update webhook precursor configuration at runtime."""
+    if "mode" in config:
+        settings.WEBHOOK_MODE = config["mode"]
+    if "keyword_triggers" in config:
+        settings.WEBHOOK_KEYWORD_TRIGGERS = config["keyword_triggers"]
+    if "label_triggers" in config:
+        settings.WEBHOOK_LABEL_TRIGGERS = config["label_triggers"]
+    if "repo_allowlist" in config:
+        settings.WEBHOOK_REPO_ALLOWLIST = config["repo_allowlist"]
+    if "skip_bots" in config:
+        settings.WEBHOOK_SKIP_BOTS = config["skip_bots"]
+    
+    logger.info(f"Webhook config updated: mode={settings.WEBHOOK_MODE}, keywords={len(settings.WEBHOOK_KEYWORD_TRIGGERS)}, labels={len(settings.WEBHOOK_LABEL_TRIGGERS)}")
+    return {"status": "updated", "config": await get_webhook_config()}
+
+@app.post("/api/webhook/test")
+async def test_webhook_precursors(payload: dict):
+    """Test if a hypothetical issue would trigger the webhook without actually processing it."""
+    title = payload.get("title", "")
+    body = payload.get("body", "")
+    labels = payload.get("labels", [])
+    author = payload.get("author", "testuser")
+    repo = payload.get("repo", "")
+    
+    results = {
+        "mode": settings.WEBHOOK_MODE,
+        "would_trigger": False,
+        "reasons": [],
+        "skipped_reasons": [],
+    }
+    
+    if settings.WEBHOOK_MODE == "manual":
+        results["skipped_reasons"].append("Webhook mode is 'manual' — all events ignored.")
+        return results
+    
+    if settings.WEBHOOK_MODE == "auto":
+        results["would_trigger"] = True
+        results["reasons"].append("Mode is 'auto' — all events processed.")
+        return results
+    
+    # Precursor mode
+    full_text = f"{title} {body}".lower()
+    
+    if settings.WEBHOOK_SKIP_BOTS and (author.endswith("[bot]") or author.endswith("-bot")):
+        results["skipped_reasons"].append(f"Author '{author}' is a bot.")
+        return results
+    
+    if settings.WEBHOOK_REPO_ALLOWLIST and repo not in settings.WEBHOOK_REPO_ALLOWLIST:
+        results["skipped_reasons"].append(f"Repo '{repo}' not in allowlist.")
+        return results
+    
+    matched_kw = [kw for kw in settings.WEBHOOK_KEYWORD_TRIGGERS if kw.lower() in full_text]
+    if matched_kw:
+        results["reasons"].append(f"Keyword match: {matched_kw}")
+    
+    matched_lbl = [lbl for lbl in labels if lbl.lower() in [t.lower() for t in settings.WEBHOOK_LABEL_TRIGGERS]]
+    if matched_lbl:
+        results["reasons"].append(f"Label match: {matched_lbl}")
+    
+    results["would_trigger"] = len(results["reasons"]) > 0
+    if not results["would_trigger"]:
+        results["skipped_reasons"].append("No keyword or label triggers matched.")
+    
+    return results
+
