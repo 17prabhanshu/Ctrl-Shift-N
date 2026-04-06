@@ -1,0 +1,83 @@
+[
+  {
+    "id": "#101",
+    "title": "App crashes when clicking login button",
+    "body": "Whenever I click the login button after typing my password, the app completely crashes and returns a 500. \nTraceback (most recent call last):\n  File \"auth.js\", line 45\n    user = await db.findOne({ email: req.body.email })\nTypeError: Cannot read property 'email' of undefined",
+    "url": "https://github.com/org/repo/issues/101",
+    "type": "bug",
+    "priority": "critical",
+    "labels": ["bug", "urgent", "auth"]
+  },
+  {
+    "id": "#102",
+    "title": "500 error on POST /api/users endpoint",
+    "body": "The users endpoint is throwing a 500 internal server error when trying to create a new user without an avatar. \nException: null pointer exception at UserController.java:120",
+    "url": "https://github.com/org/repo/issues/102",
+    "type": "bug",
+    "priority": "critical",
+    "labels": ["bug", "backend", "critical"]
+  },
+  {
+    "id": "#103",
+    "title": "Memory leak in background worker process",
+    "body": "After running for 24 hours, the background worker consumes 4GB of RAM and is eventually killed by OOM killer. We suspect the redis connection pool isn't closing properly.",
+    "url": "https://github.com/org/repo/issues/103",
+    "type": "bug",
+    "priority": "high",
+    "labels": ["bug", "performance"]
+  },
+  {
+    "id": "#201",
+    "title": "Add dark mode support to dashboard",
+    "body": "Would be great to have a dark mode toggle on the main dashboard to reduce eye strain when working at night. Can we add a simple switcher in the header?",
+    "url": "https://github.com/org/repo/issues/201",
+    "type": "feature",
+    "priority": "medium",
+    "labels": ["feature", "ui"]
+  },
+  {
+    "id": "#202",
+    "title": "Support exporting reports to CSV",
+    "body": "Our accounting team needs to export the monthly billing reports to CSV so they can import them into Excel. Currently you only support PDF export.",
+    "url": "https://github.com/org/repo/issues/202",
+    "type": "feature",
+    "priority": "medium",
+    "labels": ["enhancement"]
+  },
+  {
+    "id": "#203",
+    "title": "Implement OAuth2 authentication",
+    "body": "We should support logging in with Google and GitHub using standard OAuth2 flows to reduce friction during onboarding.",
+    "url": "https://github.com/org/repo/issues/203",
+    "type": "feature",
+    "priority": "high",
+    "labels": ["feature", "security"]
+  },
+  {
+    "id": "#301",
+    "title": "How do I configure environment variables?",
+    "body": "I'm trying to deploy this to production but I can't figure out where to put the API keys. Do I use a .env file or do I pass them directly to docker run?",
+    "url": "https://github.com/org/repo/issues/301",
+    "type": "question",
+    "priority": "low",
+    "labels": ["question", "deployment"]
+  },
+  {
+    "id": "#302",
+    "title": "What's the difference between tier 1 and tier 2?",
+    "body": "I'm looking at the pricing page and it's not clear what the difference is regarding the rate limits for the API. Can someone explain?",
+    "url": "https://github.com/org/repo/issues/302",
+    "type": "question",
+    "priority": "low",
+    "labels": ["question"]
+  },
+  {
+    "id": "#401",
+    "title": "README missing installation instructions",
+    "body": "The README.md doesn't explain how to install the new v2.0 dependencies. The `npm run setup` command fails because it's looking for a legacy package.",
+    "url": "https://github.com/org/repo/issues/401",
+    "type": "documentation",
+    "priority": "medium",
+    "labels": ["documentation"]
+  }
+]
