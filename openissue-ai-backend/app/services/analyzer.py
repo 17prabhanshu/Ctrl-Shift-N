@@ -66,23 +66,26 @@ class IssueAnalyzer:
             confidence = 0.98
             is_llm_generated = True
 
-            # Dynamic labels from LLM (NOT hardcoded type_map)
-            llm_labels = await self.llm.generate_dynamic_labels(
+            # Execute supplementary LLM generations in PARALLEL to slash latency
+            import asyncio
+            entities = nlp_data.get("entities", [])
+            
+            llm_labels_task = self.llm.generate_dynamic_labels(
                 title, body, tech_domain, issue_type, priority_level
             )
-            suggested_labels = llm_labels if llm_labels else llm_analysis.get("labels", [])
-
-            # Dynamic web suggestions from LLM (NOT hardcoded tech_patterns)
-            entities = nlp_data.get("entities", [])
-            llm_suggestions = await self.llm.generate_dynamic_web_suggestions(
+            llm_suggestions_task = self.llm.generate_dynamic_web_suggestions(
                 title, body, tech_domain, issue_type, entities
             )
-            web_suggestions = llm_suggestions if llm_suggestions else self._fallback_web_advice(title, issue_type)
-
-            # Dynamic reasoning trace from LLM (NOT template strings)
-            llm_reasoning = await self.llm.generate_dynamic_reasoning_trace(
+            llm_reasoning_task = self.llm.generate_dynamic_reasoning_trace(
                 title, body, nlp_data, issue_type, priority_level, len(similar_issues)
             )
+            
+            llm_labels, llm_suggestions, llm_reasoning = await asyncio.gather(
+                llm_labels_task, llm_suggestions_task, llm_reasoning_task
+            )
+            
+            suggested_labels = llm_labels if llm_labels else llm_analysis.get("labels", [])
+            web_suggestions = llm_suggestions if llm_suggestions else self._fallback_web_advice(title, issue_type)
             reasoning_steps = llm_reasoning if llm_reasoning else self._fallback_reasoning_trace(
                 title, body, nlp_data, issue_type, priority_level, metadata
             )
