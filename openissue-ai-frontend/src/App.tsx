@@ -1,0 +1,254 @@
+import { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Hero } from './components/Hero';
+import { ResultsPanel } from './components/ResultsPanel';
+import { GitBranch, Zap, ArrowLeft, WifiOff } from 'lucide-react';
+
+type ViewState = 'idle' | 'loading' | 'results' | 'error';
+
+const LOADING_STEPS = [
+  { icon: "🔗", text: "Fetching GitHub issue via API..." },
+  { icon: "🧠", text: "Running NLP extraction pipeline..." },
+  { icon: "📊", text: "Classifying issue type & priority..." },
+  { icon: "🔍", text: "Searching FAISS vector index..." },
+  { icon: "💡", text: "Generating AI suggestions..." },
+  { icon: "✅", text: "Finalizing analysis..." },
+];
+
+function LoaderFullscreen() {
+  const [stepIdx, setStepIdx] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStepIdx(i => Math.min(i + 1, LOADING_STEPS.length - 1));
+    }, 700);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 bg-[#030712] flex flex-col items-center justify-center z-50">
+      {/* Background */}
+      <div className="absolute inset-0 bg-grid opacity-20" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-[#2f81f7]/5 blur-[100px]" />
+
+      <div className="relative z-10 flex flex-col items-center gap-8 px-6 max-w-sm w-full">
+        {/* Spinner */}
+        <div className="relative w-20 h-20">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#2f81f7] border-r-[#a371f7]"
+          />
+          <motion.div
+            animate={{ rotate: -360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-2 rounded-full border-2 border-transparent border-t-[#f778ba]"
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Zap className="w-7 h-7 text-[#2f81f7]" />
+          </div>
+        </div>
+
+        {/* Title */}
+        <div className="text-center">
+          <h2 className="text-xl font-bold text-[#f0f6fc] mb-1">Analyzing Issue</h2>
+          <p className="text-sm text-[#484f58]">AI pipeline running...</p>
+        </div>
+
+        {/* Steps */}
+        <div className="w-full space-y-2">
+          {LOADING_STEPS.map((step, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: idx <= stepIdx ? 1 : 0.2, x: 0 }}
+              transition={{ duration: 0.3, delay: idx * 0.05 }}
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all ${
+                idx === stepIdx
+                  ? 'bg-[#2f81f7]/10 border border-[#2f81f7]/30 text-[#f0f6fc]'
+                  : idx < stepIdx
+                  ? 'text-[#3fb950]'
+                  : 'text-[#30363d]'
+              }`}
+            >
+              <span className="text-base">{idx < stepIdx ? '✓' : step.icon}</span>
+              <span className="font-mono text-xs">{step.text}</span>
+              {idx === stepIdx && (
+                <motion.span
+                  animate={{ opacity: [1, 0] }}
+                  transition={{ duration: 0.8, repeat: Infinity }}
+                  className="ml-auto w-1.5 h-1.5 rounded-full bg-[#2f81f7]"
+                />
+              )}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [viewState, setViewState] = useState<ViewState>('idle');
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [errorMsg, setErrorMsg] = useState<string>('');
+  const [analyzedUrl, setAnalyzedUrl] = useState<string>('');
+
+  const handleAnalyze = async (url: string) => {
+    setViewState('loading');
+    setErrorMsg('');
+    setAnalyzedUrl(url);
+    
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ github_url: url })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to analyze URL");
+      }
+      
+      setAnalysisResult(data);
+      setViewState('results');
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || 'Could not reach backend. Make sure the server is running on port 8000.');
+      setViewState('error');
+    }
+  };
+
+  const reset = () => {
+    setViewState('idle');
+    setAnalysisResult(null);
+    setAnalyzedUrl('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  return (
+    <div className="relative min-h-screen bg-[#030712] w-full font-sans text-[#f0f6fc]">
+      
+      {/* Header — shown when not on landing */}
+      <AnimatePresence>
+        {viewState !== 'idle' && (
+          <motion.header
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 border-b border-[#30363d] bg-[#030712]/80 backdrop-blur-xl"
+          >
+            <button onClick={reset} className="flex items-center gap-2.5 group">
+              <div className="w-7 h-7 rounded-lg bg-[#2f81f7] flex items-center justify-center">
+                <GitBranch className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-sm font-bold tracking-tight text-[#f0f6fc]">OpenIssue <span className="text-[#2f81f7]">AI</span></span>
+            </button>
+            
+            {analyzedUrl && (
+              <span className="hidden md:block text-xs font-mono text-[#484f58] truncate max-w-sm">
+                {analyzedUrl}
+              </span>
+            )}
+
+            <button
+              onClick={reset}
+              className="flex items-center gap-1.5 text-xs text-[#7d8590] hover:text-[#f0f6fc] transition-colors btn-ghost px-3 py-1.5"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              New Analysis
+            </button>
+          </motion.header>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content */}
+      <main className="relative z-10">
+        <AnimatePresence mode="wait">
+          
+          {viewState === 'idle' && (
+            <motion.div
+              key="hero"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.4 }}
+            >
+              <Hero onAnalyze={handleAnalyze} />
+            </motion.div>
+          )}
+
+          {viewState === 'loading' && (
+            <motion.div
+              key="loader"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <LoaderFullscreen />
+            </motion.div>
+          )}
+
+          {viewState === 'results' && analysisResult && (
+            <motion.div
+              key="results"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+              className="min-h-screen pt-24 pb-20 px-6"
+            >
+              <div className="max-w-5xl mx-auto">
+                <ResultsPanel data={analysisResult} />
+              </div>
+            </motion.div>
+          )}
+
+          {viewState === 'error' && (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="min-h-screen flex items-center justify-center p-6"
+            >
+              <div className="max-w-md w-full text-center glass-card p-8 rounded-2xl">
+                <div className="w-14 h-14 rounded-full bg-[#f85149]/10 border border-[#f85149]/20 flex items-center justify-center mx-auto mb-4">
+                  <WifiOff className="w-7 h-7 text-[#f85149]" />
+                </div>
+                <h2 className="text-xl font-bold text-[#f0f6fc] mb-2">Analysis Failed</h2>
+                <p className="text-sm text-[#7d8590] mb-6 font-mono leading-relaxed">{errorMsg}</p>
+                <div className="flex gap-3 justify-center">
+                  <button
+                    onClick={reset}
+                    className="btn-primary px-5 py-2.5 text-sm inline-flex items-center gap-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" /> Try Again
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+        </AnimatePresence>
+      </main>
+
+      {/* Footer — only on idle */}
+      {viewState === 'idle' && (
+        <footer className="border-t border-[#30363d]/50 py-8 px-6 text-center">
+          <p className="text-sm text-[#484f58]">
+            Built with <span className="text-[#f85149]">♥</span> using FastAPI, spaCy, FAISS & React ·{' '}
+            <span className="text-[#30363d]">No data stored · Public issues only</span>
+          </p>
+        </footer>
+      )}
+    </div>
+  );
+}
+
+export default App;
