@@ -147,7 +147,7 @@ export function ResultsPanel({ data }: { data: any }) {
       {/* Tab Navigation */}
       <motion.div variants={itemVariants} className="flex gap-1 border-b border-[#30363d] mb-6 overflow-x-auto">
         {[
-          { id: 'pipeline', label: 'AI Pipeline', icon: Cpu, count: data.reasoning_steps?.length },
+          { id: 'pipeline', label: 'Analysis Pipeline', icon: Cpu, count: data.reasoning_steps?.length },
           { id: 'suggestions', label: 'Web Suggestions', icon: Search, count: data.web_suggestions?.length },
           { id: 'reply', label: 'Auto-Reply', icon: Bot, count: null },
         ].map(tab => (
