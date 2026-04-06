@@ -130,7 +130,7 @@ export function ResultsPanel({ data }: { data: any }) {
 
         {/* Confidence bar */}
         <div className="mt-4 flex items-center gap-3">
-          <span className="text-xs text-[#484f58] font-mono shrink-0">AI Confidence</span>
+          <span className="text-xs text-[#484f58] font-mono shrink-0">Model Confidence</span>
           <div className="flex-1 h-1.5 rounded-full bg-[#21262d] overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
@@ -147,7 +147,7 @@ export function ResultsPanel({ data }: { data: any }) {
       {/* Tab Navigation */}
       <motion.div variants={itemVariants} className="flex gap-1 border-b border-[#30363d] mb-6 overflow-x-auto">
         {[
-          { id: 'pipeline', label: 'AI Pipeline', icon: Cpu, count: data.reasoning_steps?.length },
+          { id: 'pipeline', label: 'Analysis Pipeline', icon: Cpu, count: data.reasoning_steps?.length },
           { id: 'suggestions', label: 'Web Suggestions', icon: Search, count: data.web_suggestions?.length },
           { id: 'reply', label: 'Auto-Reply', icon: Bot, count: null },
         ].map(tab => (
@@ -224,8 +224,8 @@ export function ResultsPanel({ data }: { data: any }) {
                 </h3>
                 {data.similar_issues?.length === 0 ? (
                   <div className="text-center py-6">
-                    <p className="text-sm text-[#484f58] font-mono">No duplicates detected.</p>
-                    <p className="text-xs text-[#30363d] mt-1">Cosine threshold: 0.50</p>
+                    <p className="text-sm text-[#484f58] font-mono">No duplicate issues detected.</p>
+                    <p className="text-xs text-[#30363d] mt-1">Cosine similarity threshold: 0.50</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -251,7 +251,7 @@ export function ResultsPanel({ data }: { data: any }) {
 
               <div className="glass-card rounded-xl p-5">
                 <h3 className="text-sm font-semibold text-[#f0f6fc] mb-4 flex items-center gap-2">
-                  <Info className="w-4 h-4 text-[#ffa657]" /> Issue Signals
+                  <Info className="w-4 h-4 text-[#ffa657]" /> NLP Signal Report
                 </h3>
                 <div className="space-y-3">
                   {[
