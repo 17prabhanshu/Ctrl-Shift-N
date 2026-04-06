@@ -224,8 +224,8 @@ export function ResultsPanel({ data }: { data: any }) {
                 </h3>
                 {data.similar_issues?.length === 0 ? (
                   <div className="text-center py-6">
-                    <p className="text-sm text-[#484f58] font-mono">No duplicates detected.</p>
-                    <p className="text-xs text-[#30363d] mt-1">Cosine threshold: 0.50</p>
+                    <p className="text-sm text-[#484f58] font-mono">No duplicate issues detected.</p>
+                    <p className="text-xs text-[#30363d] mt-1">Cosine similarity threshold: 0.50</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
