@@ -130,7 +130,7 @@ export function ResultsPanel({ data }: { data: any }) {
 
         {/* Confidence bar */}
         <div className="mt-4 flex items-center gap-3">
-          <span className="text-xs text-[#484f58] font-mono shrink-0">AI Confidence</span>
+          <span className="text-xs text-[#484f58] font-mono shrink-0">Model Confidence</span>
           <div className="flex-1 h-1.5 rounded-full bg-[#21262d] overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
@@ -251,7 +251,7 @@ export function ResultsPanel({ data }: { data: any }) {
 
               <div className="glass-card rounded-xl p-5">
                 <h3 className="text-sm font-semibold text-[#f0f6fc] mb-4 flex items-center gap-2">
-                  <Info className="w-4 h-4 text-[#ffa657]" /> Issue Signals
+                  <Info className="w-4 h-4 text-[#ffa657]" /> NLP Signal Report
                 </h3>
                 <div className="space-y-3">
                   {[
