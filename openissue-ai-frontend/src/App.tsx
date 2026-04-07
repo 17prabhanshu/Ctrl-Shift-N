@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Hero } from './components/Hero';
 import { ResultsPanel } from './components/ResultsPanel';
-import { GitBranch, Zap, ArrowLeft, WifiOff } from 'lucide-react';
+import { WebhookSettings } from './components/WebhookSettings';
+import { GitBranch, Zap, ArrowLeft, WifiOff, Settings } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 
-type ViewState = 'idle' | 'loading' | 'results' | 'error';
+type ViewState = 'idle' | 'loading' | 'results' | 'error' | 'settings';
 
 const LOADING_STEPS = [
   { icon: "🔗", text: "Fetching GitHub issue via API..." },
@@ -156,13 +157,25 @@ function App() {
               </span>
             )}
 
-            <button
-              onClick={reset}
-              className="flex items-center gap-1.5 text-xs text-[var(--color-secondary)] hover:text-[var(--color-primary)] transition-colors btn-ghost px-3 py-1.5"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              New Analysis
-            </button>
+            <div className="flex items-center gap-4">
+              {viewState !== 'settings' && (
+                <button
+                  onClick={() => setViewState('settings')}
+                  className="hidden md:flex items-center gap-2 text-xs text-[var(--color-secondary)] hover:text-[var(--color-primary)] transition-colors btn-ghost px-3 py-1.5 border border-transparent"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  Webhook Settings
+                </button>
+              )}
+
+              <button
+                onClick={reset}
+                className="flex items-center gap-1.5 text-xs text-[var(--color-secondary)] hover:text-[var(--color-primary)] transition-colors btn-ghost px-3 py-1.5"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                New Analysis
+              </button>
+            </div>
           </motion.header>
         )}
       </AnimatePresence>
@@ -179,7 +192,10 @@ function App() {
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.4 }}
             >
-              <Hero onAnalyze={handleAnalyze} />
+              <Hero 
+                onAnalyze={handleAnalyze} 
+                onOpenSettings={() => setViewState('settings')} 
+              />
             </motion.div>
           )}
 
@@ -232,6 +248,19 @@ function App() {
                   </button>
                 </div>
               </div>
+            </motion.div>
+          )}
+
+          {viewState === 'settings' && (
+            <motion.div
+              key="settings"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+              className="pt-14"
+            >
+              <WebhookSettings />
             </motion.div>
           )}
 

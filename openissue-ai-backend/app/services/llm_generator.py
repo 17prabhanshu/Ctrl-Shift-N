@@ -11,7 +11,7 @@ class LLMGenerator:
     def __init__(self):
         self.api_key = settings.GEMINI_API_KEY
         self.base_url = "https://generativelanguage.googleapis.com/v1beta/models"
-        self.models = ["gemini-2.0-flash", "gemini-2.5-flash"]  # Ordered fallback list
+        self.models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]  # gemini-2.0-flash is the only one confirmed reachable with this key.
 
     def _is_available(self) -> bool:
         return bool(self.api_key) and self.api_key != "your_gemini_api_key_here"
@@ -40,7 +40,7 @@ class LLMGenerator:
                         response = await client.post(endpoint, json=payload)
                         
                         if response.status_code == 429:
-                            wait_time = 1.0 + (attempt * 0.5)  # 1s, 1.5s backoff
+                            wait_time = 5.0 + (attempt * 5.0)  # Heavy backoff for confirmed rate limiting
                             logger.warning(f"Rate limited on {model_name} (attempt {attempt+1}/2). Waiting {wait_time}s...")
                             await asyncio.sleep(wait_time)
                             continue

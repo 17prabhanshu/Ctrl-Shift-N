@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
-import { GitBranch, Zap, Shield, Brain, ArrowRight, ChevronDown, Terminal, Star, TrendingUp, Clock, Users, CheckCircle2, Bot, Network, Search } from 'lucide-react';
+import { GitBranch, Zap, Shield, Brain, ArrowRight, ChevronDown, Settings, CheckCircle2, Bot, Network, Search, Star, TrendingUp, Clock, Users, Terminal } from 'lucide-react';
 import clsx from 'clsx';
 
 interface HeroProps {
   onAnalyze: (url: string) => void;
+  onOpenSettings: () => void;
 }
 
 const STATS = [
@@ -115,7 +116,7 @@ function AnimatedCounter({ target, suffix = "", duration = 2000 }: { target: num
   );
 }
 
-export function Hero({ onAnalyze }: HeroProps) {
+export function Hero({ onAnalyze, onOpenSettings }: HeroProps) {
   const [url, setUrl] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [snippetIndex, setSnippetIndex] = useState(0);
@@ -250,6 +251,18 @@ export function Hero({ onAnalyze }: HeroProps) {
               Analyze
             </button>
           </motion.form>
+
+          {/* Settings CTA */}
+          <motion.div variants={itemVariants} className="mt-6">
+            <button 
+              onClick={onOpenSettings}
+              className="group flex items-center gap-2.5 text-xs font-bold text-[var(--color-secondary)] hover:text-[var(--color-accent)] transition-all uppercase tracking-widest"
+            >
+              <Settings className="w-4 h-4 transition-transform group-hover:scale-110" />
+              Configure Webhook Settings
+              <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+            </button>
+          </motion.div>
 
           {/* Examples */}
           <motion.div variants={itemVariants} className="mt-4 flex flex-wrap items-center gap-2 justify-center">

@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: Optional[str] = None
 
     # Webhook Precursor System
-    WEBHOOK_MODE: str = "precursor"  # "auto" | "precursor" | "manual"
+    WEBHOOK_MODE: str = "auto"  # "auto" | "precursor" | "manual"
     WEBHOOK_KEYWORD_TRIGGERS: List[str] = [
         "crash", "bug", "error", "broken", "security", "urgent",
         "regression", "vulnerability", "critical", "fix",
