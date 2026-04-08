@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Hero } from './components/Hero';
 import { ResultsPanel } from './components/ResultsPanel';
 import { WebhookSettings } from './components/WebhookSettings';
+import { CursorGlow } from './components/CursorGlow';
 import { GitBranch, Zap, ArrowLeft, WifiOff, Settings } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 
@@ -132,6 +133,7 @@ function App() {
 
   return (
     <div className="relative min-h-screen bg-[var(--color-background)] w-full font-sans text-[var(--color-primary)]">
+      <CursorGlow />
       <Toaster position="bottom-right" />
       
       {/* Header — shown when not on landing */}
