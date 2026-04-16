@@ -9,6 +9,8 @@ import { Toaster } from 'react-hot-toast';
 
 type ViewState = 'idle' | 'loading' | 'results' | 'error' | 'settings';
 
+const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8000';
+
 const LOADING_STEPS = [
   { icon: "🔗", text: "Fetching GitHub issue via API..." },
   { icon: "🧠", text: "Running NLP extraction pipeline..." },
@@ -103,7 +105,7 @@ function App() {
     setAnalyzedUrl(url);
     
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/analyze', {
+      const response = await fetch(`${API_BASE}/api/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ github_url: url })

@@ -273,7 +273,11 @@ export function Hero({ onAnalyze, onOpenSettings }: HeroProps) {
             ].map((ex) => (
               <button
                 key={ex.url}
-                onClick={() => setUrl(ex.url)}
+                type="button"
+                onClick={() => {
+                  setUrl(ex.url);
+                  onAnalyze(ex.url);
+                }}
                 className="text-xs text-[var(--color-accent-light)] hover:text-white font-mono border border-[var(--color-border)] hover:border-[var(--color-accent)]/40 rounded-lg px-2.5 py-1 transition-all"
               >
                 {ex.label}

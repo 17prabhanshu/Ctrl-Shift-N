@@ -1,0 +1,25 @@
+﻿f90117b | Prabhanshu Shekhar | feat: complete webhook fix & AI engine robust retry. system ready for production triage.
+6374bbe | 17prabhanshu | fix(ai): reduce rate limit backoff to prevent frontend analyze timeout
+43740c1 | 17prabhanshu | perf: parallelize LLM calls with asyncio.gather to slash analysis latency
+99a9bed | 17prabhanshu | feat: complete system refactor to dynamic LLM models and premium UI overhaul
+bf5fc46 | nikunj069 | fix(webhook): resolve request stream consumption deadlock in main
+d10fb36 | shadowmonarch7898-crypto | feat(ai): architect Domain-Locked Web Suggestions & Analysis Schemas
+30e2ef2 | 17prabhanshu | style(ui): implement AI-Generated Badges, Multi-Category Icons & System Refactor
+6dbd59d | Aadhar1009 | feat(ai): implement Choice B JSON Reasoning & LLM Infrastructure
+ba372e3 | nikunj069 | feat(ai): implement Choice C Semantic Vector Similarity & Priority Clustering
+16d340e | Aadhar1009 | Merge pull request #1 from Aadhar1009/main
+0625512 | shadowmonarch7898-crypto | docs: add backend architecture documentation for AI pipeline
+cd92812 | shadowmonarch7898-crypto | feat: expand priority scorer with community engagement and severity signals
+3141986 | shadowmonarch7898-crypto | feat: add spaCy NLP processor with enhanced stack trace pattern detection
+ec7936c | shadowmonarch7898-crypto | feat: implement keyword-based NLP classifier for issue type detection
+00832b1 | Aadhar1009 | fix: improve results panel labels and confidence display
+56c237d | Aadhar1009 | feat: build animated multi-step loader with pipeline progress dots
+706941e | Aadhar1009 | feat: add FAISS vector similarity search display with match scoring
+637b621 | Aadhar1009 | feat: redesign results panel with tabbed analysis layout
+b56a2e4 | nikunj069 | feat: add multi-step animated loader with pipeline progress display
+395382a | nikunj069 | style: update social proof copy and footer text
+310380e | nikunj069 | feat: add glassmorphism utilities and animation keyframes to design system
+757da6e | nikunj069 | feat: build animated hero section with live pipeline ticker
+94217af | Prabhanshu Shekhar | feat: integrate frontend with backend analysis API
+581cf75 | Prabhanshu Shekhar | feat: setup React frontend with dark theme and animation system
+d627f1a | Prabhanshu Shekhar | feat: add embeddings manager and vector store for duplicate detection

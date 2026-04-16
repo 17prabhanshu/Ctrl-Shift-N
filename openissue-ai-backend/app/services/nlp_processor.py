@@ -20,6 +20,9 @@ class NLPProcessor:
         try:
             self.nlp = spacy.load("en_core_web_sm")
             logger.info("Loaded spaCy NLP model (en_core_web_sm).")
+        except OSError as e:
+            logger.warning("spaCy model 'en_core_web_sm' not found. Falling back to blank English model.")
+            self.nlp = spacy.blank("en")
         except Exception as e:
             logger.error(f"Failed to load spaCy model: {e}")
             raise

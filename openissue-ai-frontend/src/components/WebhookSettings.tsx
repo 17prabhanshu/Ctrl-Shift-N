@@ -31,6 +31,8 @@ interface WebhookConfig {
   repo_allowlist: string[];
 }
 
+const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8000';
+
 export function WebhookSettings() {
   const [config, setConfig] = useState<WebhookConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,7 @@ export function WebhookSettings() {
   const fetchConfig = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/webhook/config');
+      const response = await fetch(`${API_BASE}/api/webhook/config`);
       const data = await response.json();
       setConfig(data);
     } catch (err) {
@@ -68,7 +70,7 @@ export function WebhookSettings() {
     if (!config) return;
     setSaving(true);
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/webhook/config', {
+      const response = await fetch(`${API_BASE}/api/webhook/config`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config)
@@ -127,7 +129,7 @@ export function WebhookSettings() {
     setSimulating(true);
     setSimulationResult(null);
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/webhook/test', {
+      const response = await fetch(`${API_BASE}/api/webhook/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

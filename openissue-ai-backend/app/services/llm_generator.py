@@ -36,12 +36,12 @@ class LLMGenerator:
             
             for attempt in range(2):  # 2 retries per model to fail fast
                 try:
-                    async with httpx.AsyncClient(timeout=15.0) as client:
+                    async with httpx.AsyncClient(timeout=12.0) as client:
                         response = await client.post(endpoint, json=payload)
                         
                         if response.status_code == 429:
-                            wait_time = 5.0 + (attempt * 5.0)  # Heavy backoff for confirmed rate limiting
-                            logger.warning(f"Rate limited on {model_name} (attempt {attempt+1}/2). Waiting {wait_time}s...")
+                            wait_time = 3.0 + (attempt * 2.0)  # Faster retry for rate limiting
+                            logger.warning(f"Rate limited on {model_name}. Waiting {wait_time}s...")
                             await asyncio.sleep(wait_time)
                             continue
                         
